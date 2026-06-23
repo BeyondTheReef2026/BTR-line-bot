@@ -1,4 +1,5 @@
 import { messagingApi, validateSignature } from "@line/bot-sdk";
+import type { IncomingMessage, ServerResponse } from "node:http";
 import { handlePostback, handleText } from "../src/flow.js";
 
 const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
@@ -6,16 +7,29 @@ const channelSecret = process.env.LINE_CHANNEL_SECRET ?? "";
 
 const client = new messagingApi.MessagingApiClient({ channelAccessToken });
 
-export default async function handler(req: Request): Promise<Response> {
+export const config = {
+  api: { bodyParser: false },
+};
+
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== "POST") {
-    return new Response("Method Not Allowed", { status: 405 });
+    res.writeHead(405);
+    res.end("Method Not Allowed");
+    return;
   }
 
-  const body = await req.text();
-  const signature = req.headers.get("x-line-signature") ?? "";
+  const chunks: Buffer[] = [];
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  const body = Buffer.concat(chunks).toString("utf-8");
+
+  const signature = (req.headers["x-line-signature"] as string) ?? "";
 
   if (!validateSignature(body, channelSecret, signature)) {
-    return new Response("Unauthorized", { status: 401 });
+    res.writeHead(401);
+    res.end("Unauthorized");
+    return;
   }
 
   const payload = JSON.parse(body) as { events: messagingApi.Event[] };
@@ -44,7 +58,6 @@ export default async function handler(req: Request): Promise<Response> {
     })
   );
 
-  return new Response("OK");
+  res.writeHead(200);
+  res.end("OK");
 }
-
-export const config = { runtime: 'edge' };
