@@ -33,6 +33,8 @@ const WORKSHOP_TYPES: Record<string, string> = {
   "wtype:other":      "その他",
 };
 
+const RESET_KEYWORDS = ["お問い合わせ", "問い合わせ", "メニュー", "最初から", "トップ"];
+
 export async function handlePostback(
   client: messagingApi.MessagingApiClient,
   userId: string,
@@ -99,7 +101,7 @@ export async function handleText(
 
   const state = await getState(userId);
 
-  if (!state || state.step === "CATEGORY") {
+  if (!state || state.step === "CATEGORY" || RESET_KEYWORDS.includes(text.trim())) {
     await setState(userId, { step: "CATEGORY" });
     await reply(categoryMenu());
     return;
