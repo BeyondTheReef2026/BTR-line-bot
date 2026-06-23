@@ -94,8 +94,14 @@ export async function handleText(
   client: messagingApi.MessagingApiClient,
   userId: string,
   replyToken: string,
-  text: string
+  text: string,
+  groupId?: string
 ): Promise<void> {
+  if (groupId) {
+    console.log("groupId:", groupId);
+    return;
+  }
+
   const reply = (msgs: Message | Message[]) =>
     client.replyMessage({ replyToken, messages: Array.isArray(msgs) ? msgs : [msgs] });
 
