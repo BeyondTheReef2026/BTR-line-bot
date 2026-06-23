@@ -2,6 +2,7 @@ import type { messagingApi } from "@line/bot-sdk";
 import type { Message } from "@line/bot-sdk";
 import { getState, setState, clearState } from "./state.js";
 import { notifyStaff } from "./notify.js";
+import { uploadImageToDrive } from "./drive.js";
 import {
   categoryMenu,
   askEmail, askOrderNo, askName, askDetail, askPhoto,
@@ -212,8 +213,17 @@ export async function handleImage(
 
   const photoSteps = ["P_PHOTO", "R_PHOTO", "G_PHOTO"];
   if (photoSteps.includes(state.step)) {
+    const token = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
+    const res = await fetch(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const filename = `inquiry_${Date.now()}.jpg`;
+    const driveLink = await uploadImageToDrive(buffer, filename);
+
     await finishInquiry(client, userId, replyToken, state.category ?? "", {
-      ...state.data, photo: `画像あり（ID: ${messageId}）`,
+      ...state.data,
+      photo: driveLink,
     });
   }
 }
@@ -225,7 +235,6 @@ async function finishInquiry(
   category: string,
   data: Record<string, string>
 ): Promise<void> {
-  console.log("userId:", userId);
   await clearState(userId);
 
   const labelMap: Record<string, string> = {
