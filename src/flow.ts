@@ -4,23 +4,33 @@ import { getState, setState, clearState } from "./state.js";
 import { notifyStaff } from "./notify.js";
 import {
   categoryMenu,
-  orderSubMenu,
-  memberSubMenu,
-  workshopSubMenu,
-  autoAnswer,
-  workshopScheduleAnswer,
-  handoffNamePrompt,
-  handoffPhonePrompt,
-  handoffMessagePrompt,
-  handoffComplete,
+  askEmail, askOrderNo, askName, askDetail, askPhoto,
+  purchaseTypeMenu, generalTypeMenu, workshopTypeMenu,
 } from "./messages.js";
 
-const CATEGORY_LABELS: Record<string, string> = {
-  order: "ご注文について",
-  member: "会員登録・メルマガについて",
-  workshop: "ワークショップ・養成講座について",
-  store: "店舗について",
-  other: "その他のご相談",
+const PURCHASE_TYPES: Record<string, string> = {
+  "ptype:order_check": "注文内容のご確認",
+  "ptype:address":     "お届け先住所の変更",
+  "ptype:delivery":    "配送状況・配送日時変更",
+  "ptype:defect":      "商品に不備・お気づきの点がある",
+};
+
+const GENERAL_TYPES: Record<string, string> = {
+  "gtype:product_spec":  "商品仕様について",
+  "gtype:product_sale":  "商品販売について",
+  "gtype:login":         "ログインできない",
+  "gtype:newsletter":    "メルマガが届かない",
+  "gtype:email_change":  "登録メアドの変更",
+  "gtype:delete":        "アカウントの削除",
+  "gtype:other":         "その他",
+};
+
+const WORKSHOP_TYPES: Record<string, string> = {
+  "wtype:curriculum": "講座の内容・カリキュラム",
+  "wtype:schedule":   "日程・スケジュール",
+  "wtype:level":      "受講資格・レベル相談",
+  "wtype:payment":    "お申し込み・お支払い方法",
+  "wtype:other":      "その他",
 };
 
 export async function handlePostback(
@@ -29,108 +39,52 @@ export async function handlePostback(
   replyToken: string,
   data: string
 ): Promise<void> {
-  const reply = (messages: Message | Message[]) =>
-    client.replyMessage({
-      replyToken,
-      messages: Array.isArray(messages) ? messages : [messages],
-    });
+  const reply = (msgs: Message | Message[]) =>
+    client.replyMessage({ replyToken, messages: Array.isArray(msgs) ? msgs : [msgs] });
 
-  // カテゴリ選択
-  if (data.startsWith("cat:")) {
-    const cat = data.slice(4);
-
-    if (cat === "store") {
-      await clearState(userId);
-      await reply(
-        autoAnswer(
-          "【店舗情報】\n📍 横浜市港北区日吉本町1-24-8-A\n\n🕐 営業時間：水・木・金・土・日 11:00〜17:00\n🔒 定休日：月・火・祝日\n💳 店頭お支払い：クレジットカードのみ"
-        )
-      );
-      return;
-    }
-
-    if (cat === "other") {
-      await setState(userId, { step: "HANDOFF_NAME", category: "その他のご相談" });
-      await reply(handoffNamePrompt());
-      return;
-    }
-
-    if (cat === "order") {
-      await setState(userId, { step: "ORDER_SUB" });
-      await reply(orderSubMenu());
-      return;
-    }
-
-    if (cat === "member") {
-      await setState(userId, { step: "MEMBER_SUB" });
-      await reply(memberSubMenu());
-      return;
-    }
-
-    if (cat === "workshop") {
-      await setState(userId, { step: "WORKSHOP_SUB" });
-      await reply(workshopSubMenu());
-      return;
-    }
+  if (data === "cat:purchase") {
+    await setState(userId, { step: "P_EMAIL", category: "ご購入のお客様", data: {} });
+    await reply(askEmail());
+    return;
   }
-
-  // ご注文サブ選択
-  if (data.startsWith("order:")) {
-    const sub = data.slice(6);
-    await clearState(userId);
-    const answers: Record<string, string> = {
-      delivery:
-        "ご入金確認後、1〜1.5ヶ月の製作期間をいただいております。\n完全手作りのためご了承ください。",
-      next: "次回受注日時が決まりましたら、トップページ・メルマガ・SNSでお知らせします。",
-      reserve: "予約・キャンセル待ちは承っておらず、先着順での受注となります。",
-      color: "商品によりお好きな色は選べますが、編み方のご指定はできません。",
-    };
-    await reply(autoAnswer(answers[sub] ?? "ご質問ありがとうございます。"));
+  if (data === "cat:repair") {
+    await setState(userId, { step: "R_EMAIL", category: "修理・メンテナンス", data: {} });
+    await reply(askEmail());
+    return;
+  }
+  if (data === "cat:general") {
+    await setState(userId, { step: "G_EMAIL", category: "一般（購入前）", data: {} });
+    await reply(askEmail());
+    return;
+  }
+  if (data === "cat:workshop") {
+    await setState(userId, { step: "W_EMAIL", category: "ワークショップ・養成講座", data: {} });
+    await reply(askEmail());
     return;
   }
 
-  // 会員登録サブ選択
-  if (data.startsWith("member:")) {
-    const sub = data.slice(7);
-    await clearState(userId);
-    const answers: Record<string, string> = {
-      merit: "メルマガ希望にすると次回受注日や新作情報をお届けし、ご注文時の住所入力も省けます。",
-      guest: "ご購入は会員様限定です。\n登録はどなた様でも無料ですのでお気軽にご登録ください。",
-      email:
-        "迷惑メール設定をご確認ください。\nbeyondthereef.jpからのメールを受信できるようフィルター設定をお願いします。",
-    };
-    await reply(autoAnswer(answers[sub] ?? "ご質問ありがとうございます。"));
+  if (data in PURCHASE_TYPES) {
+    const state = await getState(userId);
+    if (!state) { await reply(categoryMenu()); return; }
+    await setState(userId, { ...state, step: "P_DETAIL", data: { ...state.data, inquiryType: PURCHASE_TYPES[data] } });
+    await reply(askDetail());
     return;
   }
 
-  // ワークショップサブ選択
-  if (data.startsWith("workshop:")) {
-    const sub = data.slice(9);
+  if (data in GENERAL_TYPES) {
+    const state = await getState(userId);
+    if (!state) { await reply(categoryMenu()); return; }
+    await setState(userId, { ...state, step: "G_DETAIL", data: { ...state.data, inquiryType: GENERAL_TYPES[data] } });
+    await reply(askDetail());
+    return;
+  }
 
-    if (sub === "schedule") {
-      await clearState(userId);
-      await reply(workshopScheduleAnswer());
-      return;
-    }
-
-    if (sub === "payment") {
-      await clearState(userId);
-      await reply(
-        autoAnswer(
-          "各講座ページからそのままお申し込みいただけます。\n\n💳 お支払い方法：クレジットカードまたはPayPay\n（現金払いは対応しておりません）\n\n店頭でのお支払いも可能です。"
-        )
-      );
-      return;
-    }
-
-    if (sub === "other") {
-      await setState(userId, {
-        step: "HANDOFF_NAME",
-        category: CATEGORY_LABELS.workshop,
-      });
-      await reply(handoffNamePrompt());
-      return;
-    }
+  if (data in WORKSHOP_TYPES) {
+    const state = await getState(userId);
+    if (!state) { await reply(categoryMenu()); return; }
+    await setState(userId, { ...state, step: "W_DETAIL", data: { ...state.data, inquiryType: WORKSHOP_TYPES[data] } });
+    await reply(askDetail());
+    return;
   }
 }
 
@@ -140,53 +94,151 @@ export async function handleText(
   replyToken: string,
   text: string
 ): Promise<void> {
-  const reply = (messages: Message | Message[]) =>
-    client.replyMessage({
-      replyToken,
-      messages: Array.isArray(messages) ? messages : [messages],
-    });
+  const reply = (msgs: Message | Message[]) =>
+    client.replyMessage({ replyToken, messages: Array.isArray(msgs) ? msgs : [msgs] });
 
   const state = await getState(userId);
 
-  // 状態なし or 初回 → カテゴリ選択
   if (!state || state.step === "CATEGORY") {
     await setState(userId, { step: "CATEGORY" });
     await reply(categoryMenu());
     return;
   }
 
-  // 担当者引き継ぎフロー
-  if (state.step === "HANDOFF_NAME") {
-    await setState(userId, {
-      ...state,
-      step: "HANDOFF_PHONE",
-      handoffData: { name: text },
+  const d = state.data ?? {};
+
+  switch (state.step) {
+    case "P_EMAIL":
+      await setState(userId, { ...state, step: "P_ORDER", data: { ...d, email: text } });
+      await reply(askOrderNo());
+      break;
+    case "P_ORDER":
+      await setState(userId, { ...state, step: "P_NAME", data: { ...d, orderNo: text } });
+      await reply(askName());
+      break;
+    case "P_NAME":
+      await setState(userId, { ...state, step: "P_TYPE", data: { ...d, name: text } });
+      await reply(purchaseTypeMenu());
+      break;
+    case "P_DETAIL":
+      await setState(userId, { ...state, step: "P_PHOTO", data: { ...d, detail: text } });
+      await reply(askPhoto());
+      break;
+    case "P_PHOTO":
+      await finishInquiry(client, userId, replyToken, state.category ?? "", {
+        ...d, photo: text.trim() === "スキップ" ? "なし" : text,
+      });
+      break;
+
+    case "R_EMAIL":
+      await setState(userId, { ...state, step: "R_ORDER", data: { ...d, email: text } });
+      await reply(askOrderNo());
+      break;
+    case "R_ORDER":
+      await setState(userId, { ...state, step: "R_NAME", data: { ...d, orderNo: text } });
+      await reply(askName());
+      break;
+    case "R_NAME":
+      await setState(userId, { ...state, step: "R_DETAIL", data: { ...d, name: text } });
+      await reply(askDetail());
+      break;
+    case "R_DETAIL":
+      await setState(userId, { ...state, step: "R_PHOTO", data: { ...d, detail: text } });
+      await reply(askPhoto());
+      break;
+    case "R_PHOTO":
+      await finishInquiry(client, userId, replyToken, state.category ?? "", {
+        ...d, photo: text.trim() === "スキップ" ? "なし" : text,
+      });
+      break;
+
+    case "G_EMAIL":
+      await setState(userId, { ...state, step: "G_NAME", data: { ...d, email: text } });
+      await reply(askName());
+      break;
+    case "G_NAME":
+      await setState(userId, { ...state, step: "G_TYPE", data: { ...d, name: text } });
+      await reply(generalTypeMenu());
+      break;
+    case "G_DETAIL":
+      await setState(userId, { ...state, step: "G_PHOTO", data: { ...d, detail: text } });
+      await reply(askPhoto());
+      break;
+    case "G_PHOTO":
+      await finishInquiry(client, userId, replyToken, state.category ?? "", {
+        ...d, photo: text.trim() === "スキップ" ? "なし" : text,
+      });
+      break;
+
+    case "W_EMAIL":
+      await setState(userId, { ...state, step: "W_NAME", data: { ...d, email: text } });
+      await reply(askName());
+      break;
+    case "W_NAME":
+      await setState(userId, { ...state, step: "W_TYPE", data: { ...d, name: text } });
+      await reply(workshopTypeMenu());
+      break;
+    case "W_DETAIL":
+      await finishInquiry(client, userId, replyToken, state.category ?? "", {
+        ...d, detail: text,
+      });
+      break;
+
+    default:
+      await setState(userId, { step: "CATEGORY" });
+      await reply(categoryMenu());
+  }
+}
+
+export async function handleImage(
+  client: messagingApi.MessagingApiClient,
+  userId: string,
+  replyToken: string,
+  messageId: string
+): Promise<void> {
+  const reply = (msgs: Message | Message[]) =>
+    client.replyMessage({ replyToken, messages: Array.isArray(msgs) ? msgs : [msgs] });
+
+  const state = await getState(userId);
+  if (!state) { await reply(categoryMenu()); return; }
+
+  const photoSteps = ["P_PHOTO", "R_PHOTO", "G_PHOTO"];
+  if (photoSteps.includes(state.step)) {
+    await finishInquiry(client, userId, replyToken, state.category ?? "", {
+      ...state.data, photo: `画像あり（ID: ${messageId}）`,
     });
-    await reply(handoffPhonePrompt());
-    return;
+  }
+}
+
+async function finishInquiry(
+  client: messagingApi.MessagingApiClient,
+  userId: string,
+  replyToken: string,
+  category: string,
+  data: Record<string, string>
+): Promise<void> {
+  await clearState(userId);
+
+  const labelMap: Record<string, string> = {
+    email:       "メールアドレス",
+    orderNo:     "ご注文番号",
+    name:        "お名前",
+    inquiryType: "お問い合わせの種類",
+    detail:      "お問い合わせ詳細",
+    photo:       "添付写真",
+  };
+
+  const fields: Record<string, string> = { カテゴリ: category };
+  for (const [key, label] of Object.entries(labelMap)) {
+    if (data[key]) fields[label] = data[key];
   }
 
-  if (state.step === "HANDOFF_PHONE") {
-    await setState(userId, {
-      ...state,
-      step: "HANDOFF_MSG",
-      handoffData: { ...state.handoffData, phone: text },
-    });
-    await reply(handoffMessagePrompt());
-    return;
-  }
-
-  if (state.step === "HANDOFF_MSG") {
-    const { category = "不明", handoffData = {} } = state;
-    const { name = "未入力", phone = "未入力" } = handoffData;
-
-    await clearState(userId);
-    await reply(handoffComplete());
-    await notifyStaff(client, category, name, phone, text);
-    return;
-  }
-
-  // それ以外はカテゴリ選択に戻す
-  await setState(userId, { step: "CATEGORY" });
-  await reply(categoryMenu());
+  await client.replyMessage({
+    replyToken,
+    messages: [{
+      type: "text",
+      text: "お問い合わせありがとうございます！\n\n担当者より改めてご連絡いたします。\n※ご返信は翌営業日以降に順次対応いたします。\n※土日・祝日・お盆・年末年始は休業となります。\n\n他にご質問があればいつでもどうぞ😊",
+    }],
+  });
+  await notifyStaff(client, fields);
 }
