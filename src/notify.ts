@@ -1,18 +1,19 @@
 import { messagingApi } from "@line/bot-sdk";
-import { notifyGroupMessage } from "./messages.js";
 
 export async function notifyStaff(
   client: messagingApi.MessagingApiClient,
-  category: string,
-  name: string,
-  phone: string,
-  message: string
+  fields: Record<string, string>
 ): Promise<void> {
   const groupId = process.env.LINE_NOTIFY_GROUP_ID;
   if (!groupId) return;
 
+  const lines = ["【新しいお問い合わせ】", ""];
+  for (const [key, value] of Object.entries(fields)) {
+    lines.push(`${key}：${value}`);
+  }
+
   await client.pushMessage({
     to: groupId,
-    messages: [notifyGroupMessage(category, name, phone, message)],
+    messages: [{ type: "text", text: lines.join("\n") }],
   });
 }
