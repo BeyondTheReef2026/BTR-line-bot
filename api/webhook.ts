@@ -47,4 +47,4 @@ export default async function handler(req: Request): Promise<Response> {
   return new Response("OK");
 }
 
-// Node.js Runtime（デフォルト）— LINE SDKのcrypto依存のため
+export const config = { runtime: 'edge' };
