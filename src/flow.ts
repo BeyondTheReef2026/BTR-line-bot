@@ -219,6 +219,7 @@ async function finishInquiry(
   category: string,
   data: Record<string, string>
 ): Promise<void> {
+  console.log("userId:", userId);
   await clearState(userId);
 
   const labelMap: Record<string, string> = {
