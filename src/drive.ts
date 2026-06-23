@@ -24,7 +24,9 @@ async function getAccessToken(credentials: Record<string, string>): Promise<stri
       assertion: jwt,
     }),
   });
-  const json = await res.json() as { access_token: string };
+  const json = await res.json() as { access_token?: string; error?: string };
+  console.log("token response:", JSON.stringify(json));
+  if (!json.access_token) throw new Error(`token error: ${json.error}`);
   return json.access_token;
 }
 
@@ -34,27 +36,36 @@ export async function uploadImageToDrive(
 ): Promise<string> {
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
   const serviceAccountJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
-  if (!folderId || !serviceAccountJson) return "（Drive未設定）";
+  if (!folderId || !serviceAccountJson) {
+    console.log("Drive env not set");
+    return "（Drive未設定）";
+  }
 
-  const credentials = JSON.parse(serviceAccountJson);
-  const token = await getAccessToken(credentials);
+  try {
+    const credentials = JSON.parse(serviceAccountJson);
+    const token = await getAccessToken(credentials);
 
-  const metadata = JSON.stringify({ name: filename, parents: [folderId] });
-  const boundary = "boundary_btr_line";
-  const body = Buffer.concat([
-    Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: image/jpeg\r\n\r\n`),
-    imageBuffer,
-    Buffer.from(`\r\n--${boundary}--`),
-  ]);
+    const metadata = JSON.stringify({ name: filename, parents: [folderId] });
+    const boundary = "boundary_btr_line";
+    const body = Buffer.concat([
+      Buffer.from(`--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: image/jpeg\r\n\r\n`),
+      imageBuffer,
+      Buffer.from(`\r\n--${boundary}--`),
+    ]);
 
-  const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": `multipart/related; boundary=${boundary}`,
-    },
-    body,
-  });
-  const json = await res.json() as { webViewLink?: string; id?: string };
-  return json.webViewLink ?? json.id ?? "（リンク取得失敗）";
+    const res = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": `multipart/related; boundary=${boundary}`,
+      },
+      body,
+    });
+    const json = await res.json() as { webViewLink?: string; id?: string; error?: unknown };
+    console.log("drive upload response:", JSON.stringify(json));
+    return json.webViewLink ?? json.id ?? "（リンク取得失敗）";
+  } catch (e) {
+    console.error("Drive upload error:", e);
+    return "（アップロードエラー）";
+  }
 }
