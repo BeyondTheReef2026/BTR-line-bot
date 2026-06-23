@@ -36,11 +36,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   await Promise.all(
     payload.events.map(async (event) => {
+      const groupId = event.source.type === "group" ? event.source.groupId : undefined;
+
       if (event.type === "postback" && "replyToken" in event) {
         await handlePostback(client, event.source.userId ?? "", event.replyToken, event.postback.data);
       } else if (event.type === "message" && "replyToken" in event) {
         if (event.message.type === "text") {
-          await handleText(client, event.source.userId ?? "", event.replyToken, event.message.text);
+          await handleText(client, event.source.userId ?? "", event.replyToken, event.message.text, groupId);
         } else if (event.message.type === "image") {
           await handleImage(client, event.source.userId ?? "", event.replyToken, event.message.id);
         }
