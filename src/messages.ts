@@ -13,6 +13,61 @@ function text(t: string, quickReply?: QuickReply): Message {
   return quickReply ? { type: "text", text: t, quickReply } : { type: "text", text: t };
 }
 
+interface CarouselCard {
+  title: string;
+  imageUrl: string;
+  linkUrl: string;
+}
+
+const WELCOME_CARDS: CarouselCard[] = [
+  { title: "新着アイテム", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=新着アイテム", linkUrl: "https://beyondthereef.jp/collections/feature" },
+  { title: "ランキング", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=ランキング", linkUrl: "https://beyondthereef.jp/collections/ranking" },
+  { title: "オリゾン", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=オリゾン", linkUrl: "https://beyondthereef.jp/collections/horizon" },
+  { title: "ワークショップ", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=ワークショップ", linkUrl: "https://beyondthereef.jp/collections/workshop" },
+  { title: "アトリエ店舗", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=アトリエ店舗", linkUrl: "https://beyondthereef.jp/pages/atelier-event" },
+  { title: "キット", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=キット", linkUrl: "https://beyondthereef.jp/collections/kit" },
+];
+
+export function welcomeCarousel(): Message {
+  return {
+    type: "flex",
+    altText: "BEYOND THE REEF公式LINEへようこそ！",
+    contents: {
+      type: "carousel",
+      contents: WELCOME_CARDS.map((card) => ({
+        type: "bubble",
+        size: "kilo",
+        hero: {
+          type: "image",
+          url: card.imageUrl,
+          size: "full",
+          aspectRatio: "20:13",
+          aspectMode: "cover",
+        },
+        body: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            { type: "text", text: card.title, weight: "bold", size: "md", wrap: true },
+          ],
+        },
+        footer: {
+          type: "box",
+          layout: "vertical",
+          contents: [
+            {
+              type: "button",
+              style: "primary",
+              color: "#31343C",
+              action: { type: "uri", label: "詳細はこちら", uri: card.linkUrl },
+            },
+          ],
+        },
+      })),
+    },
+  };
+}
+
 export function categoryMenu(): Message {
   return text(
     "こんにちは！BEYOND THE REEF公式LINEです😊\n\nまず、お問い合わせのカテゴリをお選びください。",
