@@ -17,16 +17,37 @@ interface CarouselCard {
   title: string;
   imageUrl: string;
   linkUrl: string;
+  utmCampaign: string;
+  buttonLabel?: string;
+}
+
+function withUtm(url: string, campaign: string): string {
+  const u = new URL(url);
+  u.searchParams.set("utm_source", "line");
+  u.searchParams.set("utm_medium", "social");
+  u.searchParams.set("utm_campaign", campaign);
+  return u.toString();
 }
 
 const WELCOME_CARDS: CarouselCard[] = [
-  { title: "新着アイテム", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=新着アイテム", linkUrl: "https://beyondthereef.jp/collections/feature" },
-  { title: "ランキング", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=ランキング", linkUrl: "https://beyondthereef.jp/collections/ranking" },
-  { title: "オリゾン", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=オリゾン", linkUrl: "https://beyondthereef.jp/collections/horizon" },
-  { title: "ワークショップ", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=ワークショップ", linkUrl: "https://beyondthereef.jp/collections/workshop" },
-  { title: "アトリエ店舗", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=アトリエ店舗", linkUrl: "https://beyondthereef.jp/pages/atelier-event" },
-  { title: "キット", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=キット", linkUrl: "https://beyondthereef.jp/collections/kit" },
+  { title: "500円OFFクーポン", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=500円OFFクーポン", linkUrl: "https://beyondthereef.jp/discount/BTR-LINE?redirect=/", utmCampaign: "coupon", buttonLabel: "クーポンを使う（自動適用）" },
+  { title: "新着アイテム", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=新着アイテム", linkUrl: "https://beyondthereef.jp/collections/feature", utmCampaign: "new_items" },
+  { title: "ランキング", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=ランキング", linkUrl: "https://beyondthereef.jp/collections/ranking", utmCampaign: "ranking" },
+  { title: "オリゾン", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=オリゾン", linkUrl: "https://beyondthereef.jp/collections/horizon", utmCampaign: "horizon" },
+  { title: "ワークショップ", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=ワークショップ", linkUrl: "https://beyondthereef.jp/collections/workshop", utmCampaign: "workshop" },
+  { title: "アトリエ店舗", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=アトリエ店舗", linkUrl: "https://beyondthereef.jp/pages/atelier-event", utmCampaign: "atelier" },
+  { title: "キット", imageUrl: "https://placehold.co/600x400/EEE/31343C?text=キット", linkUrl: "https://beyondthereef.jp/collections/kit", utmCampaign: "kit" },
 ];
+
+export function welcomeGreeting(): Message {
+  return text(
+    "お友だち登録ありがとうございます🤍\n" +
+    "BEYOND THE REEFの公式LINEです。\n\n" +
+    "ご登録のお礼に、お買い物にお使いいただけるクーポンをお届けいたします✨\n\n" +
+    "新作のご案内やワークショップの情報のほか、このLINEだけでそっとお届けする情報なども、ご用意してまいります。お楽しみに！\n\n" +
+    "BEYOND THE REEF"
+  );
+}
 
 export function welcomeCarousel(): Message {
   return {
@@ -59,7 +80,7 @@ export function welcomeCarousel(): Message {
               type: "button",
               style: "primary",
               color: "#31343C",
-              action: { type: "uri", label: "詳細はこちら", uri: card.linkUrl },
+              action: { type: "uri", label: card.buttonLabel ?? "詳細はこちら", uri: withUtm(card.linkUrl, card.utmCampaign) },
             },
           ],
         },
