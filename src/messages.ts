@@ -15,7 +15,7 @@ function text(t: string, quickReply?: QuickReply): Message {
 
 export function categoryMenu(): Message {
   return text(
-    "こんにちは！BTR公式LINEです😊\n\nまず、お問い合わせのカテゴリをお選びください。",
+    "こんにちは！BEYOND THE REEF公式LINEです😊\n\nまず、お問い合わせのカテゴリをお選びください。",
     qr([
       { label: "📦 ご購入のお客様", data: "cat:purchase" },
       { label: "🔧 修理・メンテナンス", data: "cat:repair" },
@@ -80,4 +80,27 @@ export function workshopTypeMenu(): Message {
     qr([
       { label: "📚 講座の内容・カリキュラム", data: "wtype:curriculum" },
       { label: "📅 日程・スケジュール", data: "wtype:schedule" },
-      { label: "🎯 受講資格・レベル相談", data: "wtype:level" 
+      { label: "🎯 受講資格・レベル相談", data: "wtype:level" },
+      { label: "💳 申込・支払い方法", data: "wtype:payment" },
+      { label: "💬 その他", data: "wtype:other" },
+    ])
+  );
+}
+
+export function inquiryComplete(): Message {
+  return text(
+    "お問い合わせありがとうございます！\n\n" +
+    "担当者より改めてご連絡いたします。\n" +
+    "※ご返信は翌営業日以降に順次対応いたします。\n" +
+    "※土日・祝日・お盆・年末年始は休業となります。\n\n" +
+    "他にご質問があればいつでもどうぞ😊"
+  );
+}
+
+export function notifyGroupMessage(fields: Record<string, string>): Message {
+  const lines = ["【新しいお問い合わせ】", ""];
+  for (const [key, value] of Object.entries(fields)) {
+    lines.push(`${key}：${value}`);
+  }
+  return { type: "text", text: lines.join("\n") };
+}
