@@ -7,6 +7,7 @@ import {
   categoryMenu,
   askEmail, askOrderNo, askName, askDetail, askPhoto,
   purchaseTypeMenu, generalTypeMenu, workshopTypeMenu,
+  welcomeCarousel,
 } from "./messages.js";
 
 const PURCHASE_TYPES: Record<string, string> = {
@@ -35,6 +36,14 @@ const WORKSHOP_TYPES: Record<string, string> = {
 };
 
 const RESET_KEYWORDS = ["お問い合わせ", "問い合わせ", "メニュー", "最初から", "トップ"];
+
+export async function handleFollow(
+  client: messagingApi.MessagingApiClient,
+  userId: string,
+  replyToken: string
+): Promise<void> {
+  await client.replyMessage({ replyToken, messages: [welcomeCarousel()] });
+}
 
 export async function handlePostback(
   client: messagingApi.MessagingApiClient,
