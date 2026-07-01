@@ -1,6 +1,6 @@
 import { messagingApi, validateSignature } from "@line/bot-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { handlePostback, handleText, handleImage } from "../src/flow.js";
+import { handlePostback, handleText, handleImage, handleFollow } from "../src/flow.js";
 
 const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
 const channelSecret = process.env.LINE_CHANNEL_SECRET ?? "";
@@ -38,7 +38,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     payload.events.map(async (event) => {
       const groupId = event.source.type === "group" ? event.source.groupId : undefined;
 
-      if (event.type === "postback" && "replyToken" in event) {
+      if (event.type === "follow" && "replyToken" in event) {
+        await handleFollow(client, event.source.userId ?? "", event.replyToken);
+      } else if (event.type === "postback" && "replyToken" in event) {
         await handlePostback(client, event.source.userId ?? "", event.replyToken, event.postback.data);
       } else if (event.type === "message" && "replyToken" in event) {
         if (event.message.type === "text") {
