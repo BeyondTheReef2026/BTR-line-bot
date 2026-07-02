@@ -19,6 +19,7 @@ interface CarouselCard {
   linkUrl: string;
   utmCampaign: string;
   buttonLabel?: string;
+  showOverlay?: boolean;
 }
 
 function withUtm(url: string, campaign: string): string {
@@ -31,12 +32,12 @@ function withUtm(url: string, campaign: string): string {
 
 const WELCOME_CARDS: CarouselCard[] = [
   { title: "500円OFFクーポン", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999996/coupon-card-new_xfksjz.png", linkUrl: "https://beyondthereef.jp/discount/BTR-LINE?redirect=/", utmCampaign: "coupon", buttonLabel: "クーポンを使う（自動適用）" },
-  { title: "新着アイテム", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/1%E6%96%B0%E7%9D%80%E3%82%A2%E3%82%A4%E3%83%86%E3%83%A0_zbrxey.jpg", linkUrl: "https://beyondthereef.jp/collections/feature", utmCampaign: "new_items" },
-  { title: "ランキング", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/2%E3%83%A9%E3%83%B3%E3%82%AD%E3%83%B3%E3%82%AF%E3%82%99_tnmngv.jpg", linkUrl: "https://beyondthereef.jp/collections/ranking", utmCampaign: "ranking" },
-  { title: "オリゾン", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/3%E3%82%AA%E3%83%AA%E3%82%BD%E3%82%99%E3%83%B3_lphsxt.jpg", linkUrl: "https://beyondthereef.jp/collections/horizon", utmCampaign: "horizon" },
-  { title: "ワークショップ", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/4%E3%83%AF%E3%83%BC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%83%E3%83%95%E3%82%9A_shncm5.jpg", linkUrl: "https://beyondthereef.jp/collections/workshop", utmCampaign: "workshop" },
-  { title: "アトリエ店舗", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/5%E3%82%A2%E3%83%88%E3%83%AA%E3%82%A8%E5%BA%97%E8%88%97_xorlzt.jpg", linkUrl: "https://beyondthereef.jp/pages/atelier-event", utmCampaign: "atelier" },
-  { title: "キット", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/6%E3%82%AD%E3%83%83%E3%83%88_y78nyy.jpg", linkUrl: "https://beyondthereef.jp/collections/kit", utmCampaign: "kit" },
+  { title: "新着アイテム", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/1%E6%96%B0%E7%9D%80%E3%82%A2%E3%82%A4%E3%83%86%E3%83%A0_zbrxey.jpg", linkUrl: "https://beyondthereef.jp/collections/feature", utmCampaign: "new_items", showOverlay: true },
+  { title: "ランキング", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/2%E3%83%A9%E3%83%B3%E3%82%AD%E3%83%B3%E3%82%AF%E3%82%99_tnmngv.jpg", linkUrl: "https://beyondthereef.jp/collections/ranking", utmCampaign: "ranking", showOverlay: true },
+  { title: "オリゾン", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/3%E3%82%AA%E3%83%AA%E3%82%BD%E3%82%99%E3%83%B3_lphsxt.jpg", linkUrl: "https://beyondthereef.jp/collections/horizon", utmCampaign: "horizon", showOverlay: true },
+  { title: "ワークショップ", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/4%E3%83%AF%E3%83%BC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%83%E3%83%95%E3%82%9A_shncm5.jpg", linkUrl: "https://beyondthereef.jp/collections/workshop", utmCampaign: "workshop", showOverlay: true },
+  { title: "アトリエ店舗", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/5%E3%82%A2%E3%83%88%E3%83%AA%E3%82%A8%E5%BA%97%E8%88%97_xorlzt.jpg", linkUrl: "https://beyondthereef.jp/pages/atelier-event", utmCampaign: "atelier", showOverlay: true },
+  { title: "キット", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/6%E3%82%AD%E3%83%83%E3%83%88_y78nyy.jpg", linkUrl: "https://beyondthereef.jp/collections/kit", utmCampaign: "kit", showOverlay: true },
 ];
 
 export function welcomeGreeting(): Message {
@@ -55,29 +56,63 @@ export function welcomeCarousel(): Message {
     altText: "BEYOND THE REEF公式LINEへようこそ！",
     contents: {
       type: "carousel",
-      contents: WELCOME_CARDS.map((card) => ({
-        type: "bubble",
-        size: "kilo",
-        hero: {
-          type: "image",
-          url: card.imageUrl,
-          size: "full",
-          aspectRatio: "1:1",
-          aspectMode: "cover",
-        },
-        footer: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            {
-              type: "button",
-              style: "primary",
-              color: "#31343C",
-              action: { type: "uri", label: card.buttonLabel ?? "詳細はこちら", uri: withUtm(card.linkUrl, card.utmCampaign) },
+      contents: WELCOME_CARDS.map((card) => {
+        const uri = withUtm(card.linkUrl, card.utmCampaign);
+        if (!card.showOverlay) {
+          return {
+            type: "bubble",
+            size: "kilo",
+            hero: {
+              type: "image",
+              url: card.imageUrl,
+              size: "full",
+              aspectRatio: "1:1",
+              aspectMode: "cover",
+              action: { type: "uri", label: card.buttonLabel ?? "詳細はこちら", uri },
             },
-          ],
-        },
-      })),
+          };
+        }
+        return {
+          type: "bubble",
+          size: "kilo",
+          body: {
+            type: "box",
+            layout: "vertical",
+            paddingAll: "0px",
+            contents: [
+              {
+                type: "image",
+                url: card.imageUrl,
+                size: "full",
+                aspectRatio: "1:1",
+                aspectMode: "cover",
+                gravity: "top",
+              },
+              {
+                type: "box",
+                layout: "vertical",
+                position: "absolute",
+                offsetBottom: "0px",
+                offsetStart: "0px",
+                offsetEnd: "0px",
+                backgroundColor: "#00000099",
+                paddingAll: "12px",
+                action: { type: "uri", uri },
+                contents: [
+                  {
+                    type: "text",
+                    text: card.buttonLabel ?? "詳細はこちら",
+                    color: "#ffffff",
+                    align: "center",
+                    weight: "bold",
+                    size: "sm",
+                  },
+                ],
+              },
+            ],
+          },
+        };
+      }),
     },
   };
 }
