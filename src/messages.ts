@@ -62,15 +62,8 @@ export function welcomeCarousel(): Message {
           type: "image",
           url: card.imageUrl,
           size: "full",
-          aspectRatio: "20:13",
+          aspectRatio: "1:1",
           aspectMode: "cover",
-        },
-        body: {
-          type: "box",
-          layout: "vertical",
-          contents: [
-            { type: "text", text: card.title, weight: "bold", size: "md", wrap: true },
-          ],
         },
         footer: {
           type: "box",
