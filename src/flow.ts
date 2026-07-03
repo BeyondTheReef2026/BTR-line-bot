@@ -7,7 +7,7 @@ import {
   categoryMenu,
   askEmail, askOrderNo, askName, askDetail, askPhoto,
   purchaseTypeMenu, generalTypeMenu, workshopTypeMenu,
-  welcomeGreeting, welcomeCarousel,
+  welcomeGreeting, welcomeCoupon, welcomeCarousel,
 } from "./messages.js";
 
 const PURCHASE_TYPES: Record<string, string> = {
@@ -42,7 +42,7 @@ export async function handleFollow(
   userId: string,
   replyToken: string
 ): Promise<void> {
-  await client.replyMessage({ replyToken, messages: [welcomeGreeting(), welcomeCarousel()] });
+  await client.replyMessage({ replyToken, messages: [welcomeGreeting(), welcomeCoupon(), welcomeCarousel()] });
 }
 
 export async function handlePostback(
