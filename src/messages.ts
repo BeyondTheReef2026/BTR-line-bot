@@ -50,7 +50,7 @@ const WELCOME_CARDS: CarouselCard[] = [
 export function welcomeGreeting(): Message {
   return text(
     "お友だち登録ありがとうございます🤍\n" +
-    "BEYOND THE REEFの公式LINEです。\n\n" +
+    "BEYOND THE REEF公式LINEです。\n\n" +
     "ご登録のお礼に、お買い物にお使いいただけるクーポンをお届けいたします✨\n\n" +
     "新作のご案内やワークショップの情報のほか、このLINEだけでそっとお届けする情報なども、ご用意してまいります。お楽しみに！\n\n" +
     "BEYOND THE REEF"
