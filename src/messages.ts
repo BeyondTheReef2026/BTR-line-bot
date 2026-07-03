@@ -92,7 +92,7 @@ function overlayBubble(card: CarouselCard): object {
               color: "#ffffff",
               align: "center",
               weight: "bold",
-              size: "sm",
+              size: "md",
               wrap: true,
             },
           ],
