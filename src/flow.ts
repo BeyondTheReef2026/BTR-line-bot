@@ -78,7 +78,11 @@ export async function handlePostback(
   if (data in PURCHASE_TYPES) {
     const state = await getState(userId);
     if (!state) { await reply(categoryMenu()); return; }
-    await setState(userId, { ...state, step: "P_DETAIL", data: { ...state.data, inquiryType: PURCHASE_TYPES[data] } });
+    await setState(userId, {
+      ...state,
+      step: "P_DETAIL",
+      data: { ...state.data, inquiryType: PURCHASE_TYPES[data], needsPhoto: data === "ptype:defect" ? "1" : "" },
+    });
     await reply(askDetail());
     return;
   }
@@ -139,8 +143,12 @@ export async function handleText(
       await reply(purchaseTypeMenu());
       break;
     case "P_DETAIL":
-      await setState(userId, { ...state, step: "P_PHOTO", data: { ...d, detail: text } });
-      await reply(askPhoto());
+      if (d.needsPhoto === "1") {
+        await setState(userId, { ...state, step: "P_PHOTO", data: { ...d, detail: text } });
+        await reply(askPhoto());
+      } else {
+        await finishInquiry(client, userId, replyToken, state.category ?? "", { ...d, detail: text });
+      }
       break;
     case "P_PHOTO":
       await finishInquiry(client, userId, replyToken, state.category ?? "", {
@@ -179,13 +187,7 @@ export async function handleText(
       await reply(generalTypeMenu());
       break;
     case "G_DETAIL":
-      await setState(userId, { ...state, step: "G_PHOTO", data: { ...d, detail: text } });
-      await reply(askPhoto());
-      break;
-    case "G_PHOTO":
-      await finishInquiry(client, userId, replyToken, state.category ?? "", {
-        ...d, photo: text.trim() === "スキップ" ? "なし" : text,
-      });
+      await finishInquiry(client, userId, replyToken, state.category ?? "", { ...d, detail: text });
       break;
 
     case "W_EMAIL":
@@ -220,7 +222,7 @@ export async function handleImage(
   const state = await getState(userId);
   if (!state) { await reply(categoryMenu()); return; }
 
-  const photoSteps = ["P_PHOTO", "R_PHOTO", "G_PHOTO"];
+  const photoSteps = ["P_PHOTO", "R_PHOTO"];
   if (photoSteps.includes(state.step)) {
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
     const res = await fetch(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
