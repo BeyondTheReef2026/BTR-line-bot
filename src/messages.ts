@@ -150,7 +150,15 @@ export function askEmail(): Message {
 }
 
 export function askOrderNo(): Message {
-  return text("ご注文番号（4桁）を入力してください。\n（例：1234）");
+  return {
+    type: "text",
+    text: "ご注文番号（4桁）を入力してください。\n（例：1234）\n（わからない場合は下のボタンでスキップできます）",
+    quickReply: {
+      items: [
+        { type: "action", action: { type: "message", label: "スキップ", text: "スキップ" } },
+      ],
+    },
+  };
 }
 
 export function askName(): Message {
@@ -159,6 +167,17 @@ export function askName(): Message {
 
 export function askDetail(): Message {
   return text("お問い合わせの詳細をご記入ください。");
+}
+
+export function askAddressDetail(): Message {
+  return text(
+    "新しいお届け先ご住所をご記入ください。\n" +
+    "（例：〒223-0062 神奈川県横浜市港北区日吉本町1-24-8）"
+  );
+}
+
+export function askNewEmailDetail(): Message {
+  return text("新しいメールアドレスをご記入ください。\n（例：example@email.com）");
 }
 
 export function askPhoto(): Message {
