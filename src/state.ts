@@ -14,7 +14,9 @@ export type Step =
   // 3. 一般（購入前）
   | "G_EMAIL" | "G_NAME" | "G_TYPE" | "G_DETAIL" | "G_PHOTO"
   // 4. ワークショップ
-  | "W_EMAIL" | "W_NAME" | "W_TYPE" | "W_DETAIL";
+  | "W_EMAIL" | "W_NAME" | "W_TYPE" | "W_DETAIL"
+  // 担当者対応中（ボットは沈黙）
+  | "HANDOFF";
 
 export interface UserState {
   step: Step;
@@ -23,13 +25,15 @@ export interface UserState {
 }
 
 const TTL = 60 * 60 * 24;
+// 担当者対応中は長め（7日間）に保持。お客様が再度「お問い合わせ」等を送るまでボットは沈黙する。
+export const HANDOFF_TTL = 60 * 60 * 24 * 7;
 
 export async function getState(userId: string): Promise<UserState | null> {
   return kv.get<UserState>(`state:${userId}`);
 }
 
-export async function setState(userId: string, state: UserState): Promise<void> {
-  await kv.set(`state:${userId}`, state, { ex: TTL });
+export async function setState(userId: string, state: UserState, ttlSeconds: number = TTL): Promise<void> {
+  await kv.set(`state:${userId}`, state, { ex: ttlSeconds });
 }
 
 export async function clearState(userId: string): Promise<void> {
