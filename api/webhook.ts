@@ -1,6 +1,6 @@
 import { messagingApi, validateSignature } from "@line/bot-sdk";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { handlePostback, handleText, handleImage, handleFollow } from "../src/flow.js";
+import { handlePostback, handleText, handleImage, handleFollow, handleOther } from "../src/flow.js";
 
 const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
 const channelSecret = process.env.LINE_CHANNEL_SECRET ?? "";
@@ -47,6 +47,9 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
           await handleText(client, event.source.userId ?? "", event.replyToken, event.message.text, groupId);
         } else if (event.message.type === "image") {
           await handleImage(client, event.source.userId ?? "", event.replyToken, event.message.id);
+        } else if (!groupId) {
+          // 動画・スタンプ・音声・ファイル等（グループ内は無視）
+          await handleOther(client, event.source.userId ?? "", event.replyToken);
         }
       }
     })
