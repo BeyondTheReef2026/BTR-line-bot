@@ -162,9 +162,15 @@ export function askDetail(): Message {
 }
 
 export function askPhoto(): Message {
-  return text(
-    "商品の写真があれば送ってください📷\n（任意・不要な場合は「スキップ」と入力してください）"
-  );
+  return {
+    type: "text",
+    text: "商品の写真があれば送ってください📷\n（不要な場合は下のボタンでスキップできます）",
+    quickReply: {
+      items: [
+        { type: "action", action: { type: "message", label: "スキップ", text: "スキップ" } },
+      ],
+    },
+  };
 }
 
 export function purchaseTypeMenu(): Message {
