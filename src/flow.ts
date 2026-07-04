@@ -1,11 +1,12 @@
 import type { messagingApi } from "@line/bot-sdk";
 import type { Message } from "@line/bot-sdk";
-import { getState, setState, clearState } from "./state.js";
+import { getState, setState, clearState, HANDOFF_TTL } from "./state.js";
 import { notifyStaff } from "./notify.js";
 import { uploadImageToDrive } from "./drive.js";
 import {
   categoryMenu,
   askEmail, askOrderNo, askName, askDetail, askPhoto,
+  askAddressDetail, askNewEmailDetail,
   purchaseTypeMenu, generalTypeMenu, workshopTypeMenu,
   welcomeGreeting, welcomeCoupon, welcomeCarousel,
 } from "./messages.js";
@@ -83,7 +84,7 @@ export async function handlePostback(
       step: "P_DETAIL",
       data: { ...state.data, inquiryType: PURCHASE_TYPES[data], needsPhoto: data === "ptype:defect" ? "1" : "" },
     });
-    await reply(askDetail());
+    await reply(data === "ptype:address" ? askAddressDetail() : askDetail());
     return;
   }
 
@@ -91,7 +92,7 @@ export async function handlePostback(
     const state = await getState(userId);
     if (!state) { await reply(categoryMenu()); return; }
     await setState(userId, { ...state, step: "G_DETAIL", data: { ...state.data, inquiryType: GENERAL_TYPES[data] } });
-    await reply(askDetail());
+    await reply(data === "gtype:email_change" ? askNewEmailDetail() : askDetail());
     return;
   }
 
@@ -121,7 +122,19 @@ export async function handleText(
 
   const state = await getState(userId);
 
-  if (!state || state.step === "CATEGORY" || RESET_KEYWORDS.includes(text.trim())) {
+  // リセットキーワードは最優先。担当者対応中でも通常フローに戻す。
+  if (RESET_KEYWORDS.includes(text.trim())) {
+    await setState(userId, { step: "CATEGORY" });
+    await reply(categoryMenu());
+    return;
+  }
+
+  // 担当者対応中はボットは沈黙し、スタッフの手動対応に任せる。
+  if (state && state.step === "HANDOFF") {
+    return;
+  }
+
+  if (!state || state.step === "CATEGORY") {
     await setState(userId, { step: "CATEGORY" });
     await reply(categoryMenu());
     return;
@@ -135,7 +148,7 @@ export async function handleText(
       await reply(askOrderNo());
       break;
     case "P_ORDER":
-      await setState(userId, { ...state, step: "P_NAME", data: { ...d, orderNo: text } });
+      await setState(userId, { ...state, step: "P_NAME", data: { ...d, orderNo: text.trim() === "スキップ" ? "不明" : text } });
       await reply(askName());
       break;
     case "P_NAME":
@@ -161,7 +174,7 @@ export async function handleText(
       await reply(askOrderNo());
       break;
     case "R_ORDER":
-      await setState(userId, { ...state, step: "R_NAME", data: { ...d, orderNo: text } });
+      await setState(userId, { ...state, step: "R_NAME", data: { ...d, orderNo: text.trim() === "スキップ" ? "不明" : text } });
       await reply(askName());
       break;
     case "R_NAME":
@@ -222,6 +235,9 @@ export async function handleImage(
   const state = await getState(userId);
   if (!state) { await reply(categoryMenu()); return; }
 
+  // 担当者対応中は画像にも反応しない
+  if (state.step === "HANDOFF") { return; }
+
   const photoSteps = ["P_PHOTO", "R_PHOTO"];
   if (photoSteps.includes(state.step)) {
     const token = process.env.LINE_CHANNEL_ACCESS_TOKEN ?? "";
@@ -246,7 +262,9 @@ async function finishInquiry(
   category: string,
   data: Record<string, string>
 ): Promise<void> {
-  await clearState(userId);
+  // 問い合わせ完了後は「担当者対応中」に切り替え、ボットは沈黙する。
+  // お客様が「お問い合わせ」等（RESET_KEYWORDS）を送ると通常フローに戻る。
+  await setState(userId, { step: "HANDOFF" }, HANDOFF_TTL);
 
   const labelMap: Record<string, string> = {
     email:       "メールアドレス",
