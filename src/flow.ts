@@ -255,6 +255,37 @@ export async function handleImage(
   }
 }
 
+export async function handleOther(
+  client: messagingApi.MessagingApiClient,
+  userId: string,
+  replyToken: string
+): Promise<void> {
+  const reply = (msgs: Message | Message[]) =>
+    client.replyMessage({ replyToken, messages: Array.isArray(msgs) ? msgs : [msgs] });
+
+  const state = await getState(userId);
+
+  // 担当者対応中は沈黙
+  if (state && state.step === "HANDOFF") { return; }
+
+  // 写真ステップなら、改めて画像かスキップを促す
+  if (state && (state.step === "P_PHOTO" || state.step === "R_PHOTO")) {
+    await reply(askPhoto());
+    return;
+  }
+
+  // それ以外の未対応メッセージ（動画・スタンプ等）への案内。メニューで復帰できる。
+  await reply({
+    type: "text",
+    text: "恐れ入りますが、メッセージはテキストでお送りください🙏\n最初からやり直す場合は下のボタンを押してください。",
+    quickReply: {
+      items: [
+        { type: "action", action: { type: "message", label: "メニュー", text: "メニュー" } },
+      ],
+    },
+  });
+}
+
 async function finishInquiry(
   client: messagingApi.MessagingApiClient,
   userId: string,
