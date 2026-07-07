@@ -93,11 +93,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>担当者対応 管理</title>
+<title>BEYOND THE REEF公式LINE 担当者対応 管理</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: -apple-system, "Hiragino Sans", sans-serif; background: #f4f6f8; color: #262626; margin: 0; padding: 20px; }
   .wrap { max-width: 640px; margin: 0 auto; }
+  .brand { font-size: 12px; font-weight: 700; color: #2E75B6; letter-spacing: .04em; margin: 0 0 4px; }
   h1 { font-size: 20px; color: #1F4E79; margin: 0 0 4px; }
   .sub { color: #7f7f7f; font-size: 13px; margin: 0 0 18px; }
   .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -111,7 +112,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 </style></head>
 <body><div class="wrap">
   <div class="bar">
-    <div><h1>担当者対応中のお客様</h1><p class="sub">対応が終わったら「対応を終了」を押してください（${list.length}件）</p></div>
+    <div><p class="brand">【 BEYOND THE REEF 公式LINE 】</p><h1>担当者対応中のお客様</h1><p class="sub">対応が終わったら「対応を終了」を押してください（${list.length}件）</p></div>
     <a class="reload" href="/api/admin?key=${encodeURIComponent(secret)}">↻ 更新</a>
   </div>
   ${list.length ? rows : empty}
