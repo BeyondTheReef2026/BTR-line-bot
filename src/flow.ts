@@ -4,7 +4,7 @@ import { getState, setState, clearState, HANDOFF_TTL } from "./state.js";
 import { notifyStaff } from "./notify.js";
 import { uploadImageToDrive } from "./drive.js";
 import {
-  categoryMenu,
+  categoryMenu, confirmRestart,
   askEmail, askOrderNo, askName, askDetail, askPhoto,
   askAddressDetail, askNewEmailDetail,
   purchaseTypeMenu, generalTypeMenu, workshopTypeMenu,
@@ -122,8 +122,29 @@ export async function handleText(
 
   const state = await getState(userId);
 
-  // リセットキーワードは最優先。担当者対応中でも通常フローに戻す。
+  // 担当者対応中に「お問い合わせ」等が押された後の確認ステップ。
+  // 「はい」だけ新しい問い合わせを開始。それ以外は担当者対応に戻す（誤タップ対策）。
+  if (state && state.step === "HANDOFF_CONFIRM") {
+    if (text.trim() === "はい") {
+      await setState(userId, { step: "CATEGORY" });
+      await reply(categoryMenu());
+    } else {
+      await setState(userId, { step: "HANDOFF", category: state.category, data: state.data }, HANDOFF_TTL);
+      if (text.trim() === "いいえ") {
+        await reply({ type: "text", text: "承知しました。引き続き担当者が対応いたします😊" });
+      }
+    }
+    return;
+  }
+
+  // リセットキーワード（お問い合わせ・メニュー等）。
   if (RESET_KEYWORDS.includes(text.trim())) {
+    // 担当者対応中は、誤タップ対策で一度確認してから戻す。
+    if (state && state.step === "HANDOFF") {
+      await setState(userId, { step: "HANDOFF_CONFIRM", category: state.category, data: state.data }, HANDOFF_TTL);
+      await reply(confirmRestart());
+      return;
+    }
     await setState(userId, { step: "CATEGORY" });
     await reply(categoryMenu());
     return;
@@ -236,7 +257,7 @@ export async function handleImage(
   if (!state) { await reply(categoryMenu()); return; }
 
   // 担当者対応中は画像にも反応しない
-  if (state.step === "HANDOFF") { return; }
+  if (state.step === "HANDOFF" || state.step === "HANDOFF_CONFIRM") { return; }
 
   const photoSteps = ["P_PHOTO", "R_PHOTO"];
   if (photoSteps.includes(state.step)) {
@@ -266,7 +287,7 @@ export async function handleOther(
   const state = await getState(userId);
 
   // 担当者対応中は沈黙
-  if (state && state.step === "HANDOFF") { return; }
+  if (state && (state.step === "HANDOFF" || state.step === "HANDOFF_CONFIRM")) { return; }
 
   // 写真ステップなら、改めて画像かスキップを促す
   if (state && (state.step === "P_PHOTO" || state.step === "R_PHOTO")) {
@@ -295,7 +316,12 @@ async function finishInquiry(
 ): Promise<void> {
   // 問い合わせ完了後は「担当者対応中」に切り替え、ボットは沈黙する。
   // お客様が「お問い合わせ」等（RESET_KEYWORDS）を送ると通常フローに戻る。
-  await setState(userId, { step: "HANDOFF" }, HANDOFF_TTL);
+  // 管理ページ（/api/admin）で一覧表示するため、お名前・カテゴリ・日時を保存する。
+  await setState(userId, {
+    step: "HANDOFF",
+    category,
+    data: { name: data.name ?? "", handoffAt: new Date().toISOString() },
+  }, HANDOFF_TTL);
 
   const labelMap: Record<string, string> = {
     email:       "メールアドレス",
