@@ -133,6 +133,19 @@ export function welcomeCarousel(): Message {
   };
 }
 
+export function confirmRestart(): Message {
+  return {
+    type: "text",
+    text: "現在、担当者が対応中です🙇\n新しいお問い合わせを始めますか？",
+    quickReply: {
+      items: [
+        { type: "action", action: { type: "message", label: "はい（新しく始める）", text: "はい" } },
+        { type: "action", action: { type: "message", label: "いいえ（そのまま）", text: "いいえ" } },
+      ],
+    },
+  };
+}
+
 export function categoryMenu(): Message {
   return text(
     "こんにちは！BEYOND THE REEF公式LINEです😊\n\nまず、お問い合わせのカテゴリをお選びください。",
