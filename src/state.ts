@@ -16,7 +16,9 @@ export type Step =
   // 4. ワークショップ
   | "W_EMAIL" | "W_NAME" | "W_TYPE" | "W_DETAIL"
   // 担当者対応中（ボットは沈黙）
-  | "HANDOFF";
+  | "HANDOFF"
+  // 担当者対応中に「お問い合わせ」等が押されたときの確認ステップ
+  | "HANDOFF_CONFIRM";
 
 export interface UserState {
   step: Step;
