@@ -43,6 +43,9 @@ export async function handleFollow(
   userId: string,
   replyToken: string
 ): Promise<void> {
+  // 友だち追加（再登録含む）時は状態をリセットし、まっさらな状態に戻す。
+  // （担当者対応中のまま再登録してボットが沈黙し続けるのを防ぐ）
+  await clearState(userId);
   await client.replyMessage({ replyToken, messages: [welcomeGreeting(), welcomeCoupon(), welcomeCarousel()] });
 }
 
