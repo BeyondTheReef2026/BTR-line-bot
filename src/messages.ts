@@ -39,12 +39,12 @@ const COUPON_CARD: CarouselCard = {
 };
 
 const WELCOME_CARDS: CarouselCard[] = [
+  { title: "オリゾン", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1783042416/3%E3%82%AA%E3%83%AA%E3%82%BD%E3%82%99%E3%83%B3_tc4jex.jpg", linkUrl: "https://beyondthereef.jp/collections/horizon", utmCampaign: "carousel_horizon", buttonLabel: "オリゾンを見る" },
+  { title: "キット", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1783042415/6%E3%82%AD%E3%83%83%E3%83%88_gfqxka.jpg", linkUrl: "https://beyondthereef.jp/collections/kit", utmCampaign: "carousel_kit", buttonLabel: "キットを見る" },
+  { title: "ワークショップ", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1783042415/4%E3%83%AF%E3%83%BC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%83%E3%83%95%E3%82%9A_u5coaw.jpg", linkUrl: "https://beyondthereef.jp/collections/workshop", utmCampaign: "carousel_workshop", buttonLabel: "ワークショップを見る" },
   { title: "新着アイテム", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/1%E6%96%B0%E7%9D%80%E3%82%A2%E3%82%A4%E3%83%86%E3%83%A0_zbrxey.jpg", linkUrl: "https://beyondthereef.jp/collections/feature", utmCampaign: "carousel_new_items" },
   { title: "ランキング", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1782999995/2%E3%83%A9%E3%83%B3%E3%82%AD%E3%83%B3%E3%82%AF%E3%82%99_tnmngv.jpg", linkUrl: "https://beyondthereef.jp/collections/ranking", utmCampaign: "carousel_ranking" },
-  { title: "オリゾン", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1783042416/3%E3%82%AA%E3%83%AA%E3%82%BD%E3%82%99%E3%83%B3_tc4jex.jpg", linkUrl: "https://beyondthereef.jp/collections/horizon", utmCampaign: "carousel_horizon", buttonLabel: "オリゾンを見る" },
-  { title: "ワークショップ", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1783042415/4%E3%83%AF%E3%83%BC%E3%82%AF%E3%82%B7%E3%83%A7%E3%83%83%E3%83%95%E3%82%9A_u5coaw.jpg", linkUrl: "https://beyondthereef.jp/collections/workshop", utmCampaign: "carousel_workshop", buttonLabel: "ワークショップを見る" },
   { title: "アトリエ店舗", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1783042416/5%E3%82%A2%E3%83%88%E3%83%AA%E3%82%A8_tymexl.jpg", linkUrl: "https://beyondthereef.jp/pages/atelier-event", utmCampaign: "carousel_atelier", buttonLabel: "アトリエ店舗を見る" },
-  { title: "キット", imageUrl: "https://res.cloudinary.com/qeubtw8q/image/upload/v1783042415/6%E3%82%AD%E3%83%83%E3%83%88_gfqxka.jpg", linkUrl: "https://beyondthereef.jp/collections/kit", utmCampaign: "carousel_kit", buttonLabel: "キットを見る" },
 ];
 
 export function welcomeGreeting(): Message {
@@ -247,18 +247,10 @@ export function workshopTypeMenu(): Message {
 
 export function inquiryComplete(): Message {
   return text(
-    "お問い合わせありがとうございます！\n\n" +
-    "担当者より改めてご連絡いたします。\n" +
-    "※ご返信は翌営業日以降に順次対応いたします。\n" +
-    "※土日・祝日・お盆・年末年始は休業となります。\n\n" +
-    "他にご質問があればいつでもどうぞ😊"
+    "お問い合わせありがとうございました。\n" +
+    "内容を確認次第、担当者より改めてご連絡いたします。\n\n" +
+    "※返信は翌営業日以降、順次対応いたします。\n" +
+    "※土日祝・お盆・年末年始は休業となります。\n" +
+    "※営業時間：11:00〜17:00"
   );
-}
-
-export function notifyGroupMessage(fields: Record<string, string>): Message {
-  const lines = ["【新しいお問い合わせ】", ""];
-  for (const [key, value] of Object.entries(fields)) {
-    lines.push(`${key}：${value}`);
-  }
-  return { type: "text", text: lines.join("\n") };
 }
