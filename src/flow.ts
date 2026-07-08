@@ -1,7 +1,6 @@
 import type { messagingApi } from "@line/bot-sdk";
 import type { Message } from "@line/bot-sdk";
 import { getState, setState, clearState, HANDOFF_TTL } from "./state.js";
-import { notifyStaff } from "./notify.js";
 import { uploadImageToDrive } from "./drive.js";
 import {
   categoryMenu, confirmRestart,
@@ -326,20 +325,6 @@ async function finishInquiry(
     data: { name: data.name ?? "", handoffAt: new Date().toISOString() },
   }, HANDOFF_TTL);
 
-  const labelMap: Record<string, string> = {
-    email:       "メールアドレス",
-    orderNo:     "ご注文番号",
-    name:        "お名前",
-    inquiryType: "お問い合わせの種類",
-    detail:      "お問い合わせ詳細",
-    photo:       "添付写真",
-  };
-
-  const fields: Record<string, string> = { カテゴリ: category };
-  for (const [key, label] of Object.entries(labelMap)) {
-    if (data[key]) fields[label] = data[key];
-  }
-
   await client.replyMessage({
     replyToken,
     messages: [{
@@ -347,5 +332,4 @@ async function finishInquiry(
       text: "お問い合わせありがとうございます！\n\n担当者より改めてご連絡いたします。\n※ご返信は翌営業日以降に順次対応いたします。\n※土日・祝日・お盆・年末年始は休業となります。\n\n他にご質問があればいつでもどうぞ😊",
     }],
   });
-  await notifyStaff(client, fields);
 }
