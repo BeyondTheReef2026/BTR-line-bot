@@ -11,6 +11,17 @@ export const config = {
   api: { bodyParser: false },
 };
 
+function markAsRead(markAsReadToken: string): void {
+  fetch("https://api.line.me/v2/bot/chat/markAsRead", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${channelAccessToken}`,
+    },
+    body: JSON.stringify({ markAsReadToken }),
+  }).catch(() => {});
+}
+
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== "POST") {
     res.writeHead(405);
@@ -43,6 +54,10 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
       } else if (event.type === "postback" && "replyToken" in event) {
         await handlePostback(client, event.source.userId ?? "", event.replyToken, event.postback.data);
       } else if (event.type === "message" && "replyToken" in event) {
+        const markAsReadToken = (event.message as { markAsReadToken?: string }).markAsReadToken;
+        if (markAsReadToken) {
+          markAsRead(markAsReadToken);
+        }
         if (event.message.type === "text") {
           await handleText(client, event.source.userId ?? "", event.replyToken, event.message.text, groupId);
         } else if (event.message.type === "image") {
